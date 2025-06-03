@@ -1,4 +1,5 @@
 export interface ShopeeScrapp {
     storeId: string,
-    dealId: string
+    dealId: string,
+    item: string
 }

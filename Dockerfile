@@ -28,9 +28,12 @@ WORKDIR /app
 # Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
+RUN npm install --save-dev ts-node-dev
+
+COPY . .
 
 # Copy your app
 COPY . .
 
 # Default command
-CMD ["npm", "run", "debug"]
+CMD ["npm", "run", "dev"]
