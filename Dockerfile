@@ -27,8 +27,10 @@ WORKDIR /app
 
 # Copy package files and install dependencies
 COPY package*.json ./
+RUN npm install -g ngrok
 RUN npm install
 RUN npm install --save-dev ts-node-dev
+RUN npx playwright install
 
 COPY . .
 
