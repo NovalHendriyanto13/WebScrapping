@@ -35,7 +35,7 @@ export async function scrapping(req: Request<{}, {}, ShopeeScrapp>, res: Respons
         const browser = await puppeteer.launch({ 
             headless: true,
             // executablePath: '/usr/bin/chromium',
-            executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', 
+            // executablePath: '/mnt/c/Program\ Files/Google/Chrome/Application', 
             args: [
                 '--no-sandbox', 
                 '--disable-setuid-sandbox',
@@ -103,6 +103,7 @@ export async function scrapping(req: Request<{}, {}, ShopeeScrapp>, res: Respons
         page.on('response', async (response) => {
             const url = response.url();
             if (url.includes('/api/v4/pdp/get_pc')) {
+                console.log("url:" ,url);
                 data = await response.json();
                 console.log('Product JSON:', data);
             }
@@ -118,18 +119,17 @@ export async function scrapping(req: Request<{}, {}, ShopeeScrapp>, res: Respons
         await sleepWait(5000);
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 
-
         const actualUserAgent = await page.evaluate(() => navigator.userAgent);
         console.log('🧭 Verified User-Agent:', actualUserAgent);
 
         console.log('header', capturedHeaders);
-        // const data = await page.evaluate((apiUrl, capturedHeaders) => {
-        //     return window.fetch(apiUrl, {
-        //         method: 'GET',
-        //         credentials: 'include',
-        //         headers: capturedHeaders
-        //     }).then(res => res.json());
-        // }, apiUrl, capturedHeaders);
+        data = await page.evaluate((apiUrl, capturedHeaders) => {
+            return window.fetch(apiUrl, {
+                method: 'GET',
+                credentials: 'include',
+                headers: capturedHeaders
+            }).then(res => res.json());
+        }, apiUrl, capturedHeaders);
 
         await sleepWait(5000);
 
@@ -276,8 +276,6 @@ export async function getScrapping(req: Request<{}, {}, ShopeeScrapp>, res: Resp
 
         const browser = await puppeteer.launch({ 
             headless: true,
-            // executablePath: '/usr/bin/chromium',
-            executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', 
             args: [
                 '--no-sandbox', 
                 '--disable-setuid-sandbox',
@@ -329,22 +327,28 @@ export async function getScrapping(req: Request<{}, {}, ShopeeScrapp>, res: Resp
             const headers = req.headers();
 
             if (url.includes('/api/v4/pdp/get_pc')) {
+                console.log('resHeader', headers);
                 capturedHeaders = {
                     ...headers,
                     'x-api-source': 'pc',
                     'Cache-Control': "no-cache",
                     'Pragma': "no-cache",
-                    'TE': "trailer"
+                    // 'TE': "trailer",
+                    'Sec-Fetch-Dest': 'empty',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Site': 'same-origin',
                 };
+                req.continue({ headers: capturedHeaders });
+            } else {
+                req.continue();
             }
-
-            req.continue();
         });
 
         let data = {};
         page.on('response', async (response) => {
             const url = response.url();
             if (url.includes('/api/v4/pdp/get_pc')) {
+                console.log('resHeader', response.headers());
                 data = await response.json();
                 console.log('Product JSON:', data);
             }
@@ -360,18 +364,7 @@ export async function getScrapping(req: Request<{}, {}, ShopeeScrapp>, res: Resp
         await sleepWait(5000);
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 
-
-        const actualUserAgent = await page.evaluate(() => navigator.userAgent);
-        console.log('🧭 Verified User-Agent:', actualUserAgent);
-
-        console.log('header', capturedHeaders);
-        // const data = await page.evaluate((apiUrl, capturedHeaders) => {
-        //     return window.fetch(apiUrl, {
-        //         method: 'GET',
-        //         credentials: 'include',
-        //         headers: capturedHeaders
-        //     }).then(res => res.json());
-        // }, apiUrl, capturedHeaders);
+        // console.log('header', capturedHeaders);
 
         await sleepWait(5000);
 
